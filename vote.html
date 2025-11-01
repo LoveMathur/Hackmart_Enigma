@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cast Your Vote</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="voting-wizard">
+            <!-- Step 1: KYC -->
+            <div class="step active" id="step-kyc">
+                <h2>Step 1: Identity Verification</h2>
+                <div class="camera-container">
+                    <video id="webcam" autoplay playsinline></video>
+                    <canvas id="snapshot" style="display:none;"></canvas>
+                </div>
+                <div class="preview-container hidden" id="previewContainer">
+                    <img id="capturedImage" alt="Captured photo">
+                    <button id="retakeBtn" class="btn-secondary">Retake</button>
+                    <button id="confirmPhotoBtn" class="btn-primary">Confirm</button>
+                </div>
+                <button id="captureBtn" class="btn-primary">Capture Photo</button>
+            </div>
+            
+            <!-- Step 2: Vote -->
+            <div class="step hidden" id="step-vote">
+                <h2>Step 2: Cast Your Vote</h2>
+                <div class="candidates">
+                    <div class="candidate-card" data-candidate="candidate_a">
+                        <img src="candidate_a.jpg" alt="Candidate A">
+                        <h3>Candidate A</h3>
+                        <button class="btn-vote">Vote</button>
+                    </div>
+                    <div class="candidate-card" data-candidate="candidate_b">
+                        <img src="candidate_b.jpg" alt="Candidate B">
+                        <h3>Candidate B</h3>
+                        <button class="btn-vote">Vote</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 3: Confirmation -->
+            <div class="step hidden" id="step-confirm">
+                <h2>Vote Confirmed!</h2>
+                <div class="receipt">
+                    <p><strong>Vote Hash:</strong> <span id="voteHash"></span></p>
+                    <p><strong>Block Hash:</strong> <span id="blockHash"></span></p>
+                    <p><strong>Timestamp:</strong> <span id="timestamp"></span></p>
+                    <p><strong>Verification URL:</strong> <a id="verifyLink" href="#">Verify</a></p>
+                </div>
+                <button id="downloadReceipt" class="btn-primary">Download Receipt</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="auth.js"></script>
+    <script src="kyc.js"></script>
+    <script src="vote.js"></script>
+</body>
+</html>
