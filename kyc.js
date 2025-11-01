@@ -101,6 +101,37 @@ class KYCCapture {
 let kycCapture;
 let sessionToken;
 
+async function loadCandidates() {
+    try {
+        const response = await fetch('http://localhost:5000/api/candidates');
+        const data = await response.json();
+        
+        if (data.success && data.candidates) {
+            const candidatesList = document.getElementById('candidatesList');
+            candidatesList.innerHTML = '';
+            
+            data.candidates.forEach((candidate, index) => {
+                const candidateDiv = document.createElement('div');
+                candidateDiv.className = 'candidate-option';
+                candidateDiv.innerHTML = `
+                    <input type="radio" id="candidate${index}" name="candidate" 
+                           value="${candidate.CandidateName}" ${index === 0 ? 'required' : ''}>
+                    <label for="candidate${index}">
+                        <strong>${candidate.CandidateName}</strong><br>
+                        <small>${candidate.PoliticalParty} ${candidate.PartySymbol || ''}</small><br>
+                        <small style="font-style: italic;">"${candidate.Slogan || ''}"</small>
+                    </label>
+                `;
+                candidatesList.appendChild(candidateDiv);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading candidates:', error);
+        document.getElementById('candidatesList').innerHTML = 
+            '<p style="color: red;">Error loading candidates. Please refresh the page.</p>';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Get session token from storage
     sessionToken = sessionStorage.getItem('voting_session');
@@ -144,6 +175,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (uploadResult.success) {
             // Stop webcam
             kycCapture.stopWebcam();
+            
+            // Load candidates
+            await loadCandidates();
             
             // Hide KYC section, show voting section
             document.getElementById('kycSection').classList.add('hidden');

@@ -53,5 +53,21 @@
     },
     "previous_hash": "fc99c20f0d80b15ed35dc0b04728ac3647a93ccf6ba93c23edcaa72fff56d1d8",
     "hash": "34ac77ac5b2b30af17f463e5673498b380b6748556cda6a771752556e5dee7f6"
+  },
+  {
+    "index": 4,
+    "timestamp": "2025-11-01T07:50:26.914466",
+    "data": {
+      "voter_id_hash": "3320671f2aa8397fb6814a28b47f9dba636f55fdd8c287d8d7d3b427091ac692",
+      "vote_hash": "2b6269c9b8130616b9caf1cca324d19e8c12b73e90db27e1646e25119e887a4c",
+      "kyc_image_hash": "f0cdb811a27c0b8c6765d7b2467b755aaefc77443c7f2c863617fc509bc28c8e",
+      "timestamp": "2025-11-01T07:50:26.914418",
+      "geolocation": {
+        "city": "Unknown",
+        "country": "Unknown"
+      }
+    },
+    "previous_hash": "34ac77ac5b2b30af17f463e5673498b380b6748556cda6a771752556e5dee7f6",
+    "hash": "b455197b155deecb388f3bee8fac3a85ca144541ffb366db7c224fccee55d820"
   }
 ]

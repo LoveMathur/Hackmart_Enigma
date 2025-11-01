@@ -116,19 +116,9 @@
                 <p>Select your preferred candidate:</p>
                 
                 <form id="voteForm">
-                    <div class="candidate-option">
-                        <input type="radio" id="candidate1" name="candidate" value="Candidate A" required>
-                        <label for="candidate1">Candidate A</label>
-                    </div>
-                    
-                    <div class="candidate-option">
-                        <input type="radio" id="candidate2" name="candidate" value="Candidate B">
-                        <label for="candidate2">Candidate B</label>
-                    </div>
-                    
-                    <div class="candidate-option">
-                        <input type="radio" id="candidate3" name="candidate" value="Candidate C">
-                        <label for="candidate3">Candidate C</label>
+                    <div id="candidatesList">
+                        <!-- Candidates will be loaded dynamically -->
+                        <p>Loading candidates...</p>
                     </div>
                     
                     <button type="submit" class="btn-primary">Submit Vote</button>

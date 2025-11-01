@@ -24,11 +24,13 @@ auth_service = VoterAuthService('voter_registry.xlsx', keys['session_key'])
 kyc_service = KYCService('kyc_storage', keys['pii_encryption_key'])
 tamper_chain = TamperEvidenceChain('vote_chain.json')
 vote_processor = VoteProcessor(auth_service, kyc_service, tamper_chain)
-excel_manager = ExcelManager('voter_registry.xlsx', 'vote_results.xlsx')
+excel_manager = ExcelManager('voter_registry.xlsx', 'vote_records.xlsx', 'candidates.xlsx')
 anti_replay = AntiReplayProtection()
 
-# Load voter registry at startup
+# Load voter registry and candidates at startup
 excel_manager.load_voter_registry()
+excel_manager.load_candidates()
+excel_manager.load_vote_records()
 
 # ========== HTML ROUTES ==========
 
@@ -60,6 +62,21 @@ def serve_static(filename):
 def health_check():
     """Health check endpoint"""
     return jsonify({'status': 'ok', 'message': 'Server is running'}), 200
+
+@app.route('/api/candidates', methods=['GET'])
+def get_candidates():
+    """Get list of candidates"""
+    try:
+        candidates = excel_manager.get_candidates()
+        return jsonify({
+            'success': True,
+            'candidates': candidates
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
@@ -155,6 +172,22 @@ def submit_vote():
             
             # Mark voter as voted in Excel
             excel_manager.mark_voter_as_voted(voter_info['voter_id'])
+            
+            # Add vote record to vote_records.xlsx
+            excel_manager.add_vote_record(
+                voter_id=voter_info['voter_id'],
+                voter_name=voter_info.get('name', 'Unknown'),
+                candidate_voted=data['vote_choice'],
+                ip_address=request.remote_addr,
+                geolocation_city='Unknown',  # Can be enhanced with geolocation API
+                geolocation_country='Unknown',
+                kyc_image_hash=data['kyc_image_hash'],
+                block_hash=receipt.get('block_hash', 'N/A'),
+                vote_hash=receipt.get('vote_hash', 'N/A')
+            )
+            
+            # Update candidate vote count
+            excel_manager.update_candidate_vote_count(data['vote_choice'])
             
             return jsonify({
                 'success': True,
