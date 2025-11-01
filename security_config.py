@@ -19,17 +19,25 @@ class SecurityConfig:
             for key_name, key_value in keys.items():
                 f.write(f"{key_name}={key_value.decode()}\n".encode())
         
-        os.chmod('.env.keys', 0o600)  # Restrict file permissions
+        # Restrict file permissions (Unix-like systems only)
+        if os.name != 'nt':  # Not Windows
+            os.chmod('.env.keys', 0o600)
         
         return keys
     
     @staticmethod
     def load_keys():
         """Load encryption keys from secure storage"""
+        # Check if keys file exists, if not generate it
+        if not os.path.exists('.env.keys'):
+            print("No keys found. Generating new encryption keys...")
+            return SecurityConfig.generate_keys()
+        
         keys = {}
         with open('.env.keys', 'r') as f:
             for line in f:
-                key_name, key_value = line.strip().split('=')
+                # Split only on the first '=' to handle base64 keys with '=' padding
+                key_name, key_value = line.strip().split('=', 1)
                 keys[key_name] = key_value.encode()
         return keys
 
