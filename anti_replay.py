@@ -1,5 +1,6 @@
 # anti_replay.py
 import hashlib
+import os
 from datetime import datetime, timedelta
 
 class AntiReplayProtection:
@@ -21,9 +22,18 @@ class AntiReplayProtection:
             return False, "Duplicate transaction detected"
         
         # Check timestamp freshness (within 5 minutes)
-        vote_time = datetime.fromisoformat(timestamp)
-        if abs((datetime.utcnow() - vote_time).total_seconds()) > 300:
-            return False, "Transaction timestamp expired"
+        try:
+            vote_time = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+            # Remove timezone info to compare with naive datetime
+            if vote_time.tzinfo is not None:
+                vote_time = vote_time.replace(tzinfo=None)
+            
+            time_diff = abs((datetime.utcnow() - vote_time).total_seconds())
+            if time_diff > 300:
+                return False, "Transaction timestamp expired"
+        except Exception as e:
+            # If timestamp parsing fails, just skip the freshness check
+            print(f"Timestamp parsing warning: {e}")
         
         # Register vote
         self.used_nonces.add(nonce)

@@ -15,7 +15,8 @@ class ExcelManager:
         Expected columns: VoterID, Name, DOB, Email, Phone, Address
         """
         try:
-            self.voter_db = pd.read_excel(self.input_excel)
+            # Use openpyxl engine with read_only=False for better file handling
+            self.voter_db = pd.read_excel(self.input_excel, engine='openpyxl')
             required_cols = ['VoterID', 'Name', 'DOB', 'Email']
             
             if not all(col in self.voter_db.columns for col in required_cols):
@@ -26,6 +27,9 @@ class ExcelManager:
                 self.voter_db['HasVoted'] = False
             
             return True, len(self.voter_db)
+        except PermissionError:
+            print("ERROR: voter_registry.xlsx is locked. Please close Excel and restart the server.")
+            return False, "File is locked by another process"
         except Exception as e:
             return False, str(e)
     
@@ -79,10 +83,28 @@ class ExcelManager:
     
     def mark_voter_as_voted(self, voter_id):
         """Update voter registry to prevent duplicate votes"""
-        self.voter_db.loc[
-            self.voter_db['VoterID'] == voter_id, 
-            'HasVoted'
-        ] = True
-        
-        # Save updated registry
-        self.voter_db.to_excel(self.input_excel, index=False)
+        try:
+            self.voter_db.loc[
+                self.voter_db['VoterID'] == voter_id, 
+                'HasVoted'
+            ] = True
+            
+            # Save updated registry with retry logic
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    self.voter_db.to_excel(self.input_excel, index=False, engine='openpyxl')
+                    return True
+                except PermissionError as e:
+                    if attempt < max_retries - 1:
+                        import time
+                        time.sleep(0.5)  # Wait 500ms before retry
+                        continue
+                    else:
+                        # If all retries fail, log but don't crash
+                        print(f"Warning: Could not update Excel file: {e}")
+                        print("Vote is still recorded in memory and blockchain")
+                        return False
+        except Exception as e:
+            print(f"Error in mark_voter_as_voted: {e}")
+            return False

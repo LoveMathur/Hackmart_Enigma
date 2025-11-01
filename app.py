@@ -16,7 +16,7 @@ from anti_replay import AntiReplayProtection
 from security_config import SecurityConfig
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend
+CORS(app, resources={r"/api/*": {"origins": "*"}})  # Enable CORS for frontend
 
 # Initialize services
 keys = SecurityConfig.load_keys()
@@ -47,7 +47,19 @@ def login_page():
     """Serve the login page"""
     return send_file('login.html')
 
+@app.route('/<path:filename>')
+def serve_static(filename):
+    """Serve static files (CSS, JS, etc.)"""
+    if os.path.exists(filename):
+        return send_file(filename)
+    return "File not found", 404
+
 # ========== API ENDPOINTS ==========
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    return jsonify({'status': 'ok', 'message': 'Server is running'}), 200
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
@@ -75,74 +87,92 @@ def login():
 @app.route('/api/kyc/upload', methods=['POST'])
 def upload_kyc():
     """KYC image upload endpoint"""
-    session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
-    
-    voter_info = auth_service.verify_session(session_token)
-    if not voter_info:
-        return jsonify({'error': 'Invalid session'}), 401
-    
-    if 'kyc_image' not in request.files:
-        return jsonify({'error': 'No image provided'}), 400
-    
-    image_file = request.files['kyc_image']
-    image_bytes = image_file.read()
-    timestamp = request.form.get('timestamp')
-    
-    image_hash, file_path = kyc_service.process_kyc_image(
-        image_bytes,
-        voter_info['voter_id'],
-        timestamp
-    )
-    
-    return jsonify({
-        'success': True,
-        'image_hash': image_hash,
-        'encrypted_reference': os.path.basename(file_path)
-    }), 200
+    try:
+        session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        
+        voter_info = auth_service.verify_session(session_token)
+        if not voter_info:
+            return jsonify({'error': 'Invalid session'}), 401
+        
+        if 'kyc_image' not in request.files:
+            return jsonify({'error': 'No image provided'}), 400
+        
+        image_file = request.files['kyc_image']
+        image_bytes = image_file.read()
+        timestamp = request.form.get('timestamp')
+        
+        image_hash, file_path = kyc_service.process_kyc_image(
+            image_bytes,
+            voter_info['voter_id'],
+            timestamp
+        )
+        
+        return jsonify({
+            'success': True,
+            'image_hash': image_hash,
+            'encrypted_reference': os.path.basename(file_path)
+        }), 200
+    except Exception as e:
+        print(f"Error in upload_kyc: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': f'Server error: {str(e)}'
+        }), 500
 
 @app.route('/api/vote/submit', methods=['POST'])
 def submit_vote():
     """Vote submission endpoint"""
-    data = request.json
-    session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
-    
-    voter_info = auth_service.verify_session(session_token)
-    if not voter_info:
-        return jsonify({'error': 'Invalid session'}), 401
-    
-    # Anti-replay check
-    voter_id_hash = hashlib.sha256(voter_info['voter_id'].encode()).hexdigest()
-    can_vote, error = anti_replay.check_duplicate_vote(voter_id_hash)
-    if not can_vote:
-        return jsonify({'error': error}), 403
-    
-    # Generate nonce
-    nonce = anti_replay.generate_nonce(voter_info['voter_id'], data['timestamp'])
-    
-    # Process vote
-    success, receipt = vote_processor.process_vote(
-        session_token,
-        data['vote_choice'],
-        data['kyc_image_hash'],
-        request.remote_addr
-    )
-    
-    if success:
-        # Register vote (anti-replay)
-        anti_replay.register_vote(voter_id_hash, nonce, data['timestamp'])
+    try:
+        data = request.json
+        session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
         
-        # Mark voter as voted in Excel
-        excel_manager.mark_voter_as_voted(voter_info['voter_id'])
+        voter_info = auth_service.verify_session(session_token)
+        if not voter_info:
+            return jsonify({'error': 'Invalid session'}), 401
         
-        return jsonify({
-            'success': True,
-            'receipt': receipt
-        }), 200
-    else:
+        # Anti-replay check
+        voter_id_hash = hashlib.sha256(voter_info['voter_id'].encode()).hexdigest()
+        can_vote, error = anti_replay.check_duplicate_vote(voter_id_hash)
+        if not can_vote:
+            return jsonify({'error': error}), 403
+        
+        # Generate nonce
+        nonce = anti_replay.generate_nonce(voter_info['voter_id'], data['timestamp'])
+        
+        # Process vote
+        success, receipt = vote_processor.process_vote(
+            session_token,
+            data['vote_choice'],
+            data['kyc_image_hash'],
+            request.remote_addr
+        )
+        
+        if success:
+            # Register vote (anti-replay)
+            anti_replay.register_vote(voter_id_hash, nonce, data['timestamp'])
+            
+            # Mark voter as voted in Excel
+            excel_manager.mark_voter_as_voted(voter_info['voter_id'])
+            
+            return jsonify({
+                'success': True,
+                'receipt': receipt
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': receipt.get('error')
+            }), 400
+    except Exception as e:
+        print(f"Error in submit_vote: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
-            'error': receipt.get('error')
-        }), 400
+            'error': f'Server error: {str(e)}'
+        }), 500
 
 @app.route('/api/verify/<voter_id_hash>', methods=['GET'])
 def verify_vote(voter_id_hash):

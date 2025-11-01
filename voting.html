@@ -1,18 +1,146 @@
-<!-- voting.html - KYC Section -->
-<div class="kyc-section">
-    <h2>Identity Verification</h2>
-    <p>Please capture your photo for audit purposes (encrypted & stored securely)</p>
-    
-    <div class="camera-container">
-        <video id="webcam" autoplay playsinline></video>
-        <canvas id="snapshot" style="display:none;"></canvas>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Voting Portal - Cast Your Vote</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 20px auto;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #webcam {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .preview-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        #capturedImage {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .vote-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+        
+        .candidate-option {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .candidate-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .candidate-option input[type="radio"] {
+            margin-right: 15px;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .candidate-option label {
+            cursor: pointer;
+            margin: 0;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-box">
+            <h1>Secure Voting Portal</h1>
+            
+            <!-- KYC Section -->
+            <div class="kyc-section" id="kycSection">
+                <h2>Identity Verification</h2>
+                <p>Please capture your photo for audit purposes (encrypted & stored securely)</p>
+                
+                <div class="camera-container" id="cameraContainer">
+                    <video id="webcam" autoplay playsinline></video>
+                    <canvas id="snapshot" style="display:none;"></canvas>
+                </div>
+                
+                <div class="preview-container hidden" id="previewContainer">
+                    <img id="capturedImage" alt="Captured photo">
+                    <div>
+                        <button id="retakeBtn" class="btn-secondary">Retake Photo</button>
+                        <button id="confirmPhotoBtn" class="btn-primary">Confirm & Continue</button>
+                    </div>
+                </div>
+                
+                <button id="captureBtn" class="btn-primary">Capture Photo</button>
+            </div>
+            
+            <!-- Voting Section (hidden initially) -->
+            <div class="vote-section hidden" id="voteSection">
+                <h2>Cast Your Vote</h2>
+                <p>Select your preferred candidate:</p>
+                
+                <form id="voteForm">
+                    <div class="candidate-option">
+                        <input type="radio" id="candidate1" name="candidate" value="Candidate A" required>
+                        <label for="candidate1">Candidate A</label>
+                    </div>
+                    
+                    <div class="candidate-option">
+                        <input type="radio" id="candidate2" name="candidate" value="Candidate B">
+                        <label for="candidate2">Candidate B</label>
+                    </div>
+                    
+                    <div class="candidate-option">
+                        <input type="radio" id="candidate3" name="candidate" value="Candidate C">
+                        <label for="candidate3">Candidate C</label>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">Submit Vote</button>
+                </form>
+                
+                <div id="voteMessage" class="hidden"></div>
+            </div>
+            
+            <div id="error-message" class="error hidden"></div>
+        </div>
     </div>
     
-    <div class="preview-container hidden" id="previewContainer">
-        <img id="capturedImage" alt="Captured photo">
-        <button id="retakeBtn" class="btn-secondary">Retake Photo</button>
-        <button id="confirmPhotoBtn" class="btn-primary">Confirm & Continue</button>
-    </div>
-    
-    <button id="captureBtn" class="btn-primary">Capture Photo</button>
-</div>
+    <script src="kyc.js"></script>
+</body>
+</html>
