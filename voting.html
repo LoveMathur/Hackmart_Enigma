@@ -1,0 +1,18 @@
+<!-- voting.html - KYC Section -->
+<div class="kyc-section">
+    <h2>Identity Verification</h2>
+    <p>Please capture your photo for audit purposes (encrypted & stored securely)</p>
+    
+    <div class="camera-container">
+        <video id="webcam" autoplay playsinline></video>
+        <canvas id="snapshot" style="display:none;"></canvas>
+    </div>
+    
+    <div class="preview-container hidden" id="previewContainer">
+        <img id="capturedImage" alt="Captured photo">
+        <button id="retakeBtn" class="btn-secondary">Retake Photo</button>
+        <button id="confirmPhotoBtn" class="btn-primary">Confirm & Continue</button>
+    </div>
+    
+    <button id="captureBtn" class="btn-primary">Capture Photo</button>
+</div>
